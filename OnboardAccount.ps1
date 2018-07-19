@@ -74,23 +74,6 @@ $URL_AccountDetails = $URL_Accounts+"/{0}"
 $URL_V10API = $PVWAURL+"/PasswordVault/api"
 
 
-#region CSV Path (not used)
-# Script Defaults - section not needed - we are not importing from CSV
-# ---------------
-#$g_CsvDefaultPath = $Env:CSIDL_DEFAULT_DOWNLOADS
-#endregion
-
-# Safe Defaults
-# --------------
-$CPM_NAME = "PasswordManager"
-$NumberOfDaysRetention = 7
-$NumberOfVersionsRetention = 0
-
-# Template Safe parameters
-# ------------------------
-$TemplateSafeDetails = ""
-$TemplateSafeMembers = ""
-
 # Initialize Script Variables
 # ---------------------------
 $g_LogonHeader = ""
