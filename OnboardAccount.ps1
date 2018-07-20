@@ -23,7 +23,7 @@ param
 	[Parameter(Mandatory=$true,HelpMessage="Please enter the Vault application name")]
 	#[ValidateScript({Invoke-WebRequest -UseBasicParsing -DisableKeepAlive -Uri $_ -Method 'Head' -ErrorAction 'stop' -TimeoutSec 30})]
 	[String]$AppID,
-	
+
 	[Parameter(Mandatory=$true,HelpMessage="Please enter Safe Name")]
 	[String]$Safe,
 
@@ -36,7 +36,7 @@ param
 
 	[Parameter(Mandatory=$true,HelpMessage="Please enter Platform Name for account to vault")]
 	[String]$PlatformName,
-	
+
 	[Parameter(Mandatory=$true,HelpMessage="Please enter Object Name of API user")]
 	[String]$ObjectName,
 
@@ -45,7 +45,7 @@ param
 	[Switch]$DisableSSLVerify
 )
 
-# Get Script Location 
+# Get Script Location
 $ScriptLocation = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # Set Log file path
@@ -104,8 +104,8 @@ Function Encode-URL($sText)
 
 Function Log-MSG
 {
-<# 
-.SYNOPSIS 
+<#
+.SYNOPSIS
 	Method to log a message on screen and in a log file
 .DESCRIPTION
 	Logging The input Message to the Screen and the Log File. 
@@ -135,7 +135,7 @@ Function Log-MSG
 		[ValidateSet("Info","Warning","Error","Debug","Verbose")]
 		[String]$type = "Info"
 	)
-	
+
 	If ($Header) {
 		"=======================================" | Out-File -Append -FilePath $LOG_FILE_PATH 
 		Write-Host "======================================="
@@ -144,15 +144,15 @@ Function Log-MSG
 		"------------------------------------" | Out-File -Append -FilePath $LOG_FILE_PATH 
 		Write-Host "------------------------------------"
 	}
-	
-	$msgToWrite = "[$(Get-Date -Format "yyyy-MM-dd hh:mm:ss")]`t"
+
+    $msgToWrite = "[$(Get-Date -Format "yyyy-MM-dd hh:mm:ss")]`t"
 	$writeToFile = $true
 	# Replace empty message with 'N/A'
 	if([string]::IsNullOrEmpty($Msg)) { $Msg = "N/A" }
 	# Check the message type
 	switch ($type)
 	{
-		"Info" { 
+		"Info" {
 			Write-Host $MSG.ToString()
 			$msgToWrite += "[INFO]`t$Msg"
 		}
@@ -164,7 +164,7 @@ Function Log-MSG
 			Write-Host $MSG.ToString() -ForegroundColor Red
 			$msgToWrite += "[ERROR]`t$Msg"
 		}
-		"Debug" { 
+		"Debug" {
 			if($InDebug)
 			{
 				Write-Debug $MSG
@@ -172,7 +172,7 @@ Function Log-MSG
 			}
 			else { $writeToFile = $False }
 		}
-		"Verbose" { 
+		"Verbose" {
 			if($InVerbose)
 			{
 				Write-Verbose $MSG
@@ -181,7 +181,7 @@ Function Log-MSG
 			else { $writeToFile = $False }
 		}
 	}
-	
+
 	If($writeToFile) { $msgToWrite | Out-File -Append -FilePath $LOG_FILE_PATH }
 	If ($Footer) { 
 		"=======================================" | Out-File -Append -FilePath $LOG_FILE_PATH 
@@ -193,7 +193,7 @@ Function Log-MSG
 Function OpenFile-Dialog($initialDirectory)
 {
     [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") | Out-Null
-    
+
     $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
     $OpenFileDialog.initialDirectory = $initialDirectory
     $OpenFileDialog.filter = "CSV (*.csv)| *.csv"
@@ -205,7 +205,7 @@ Function OpenFile-Dialog($initialDirectory)
 Function Invoke-Rest
 {
 	param ($Command, $URI, $Header, $Body, $ErrorAction="Continue")
-	
+
 	$restResponse = ""
 	try{
 		Log-Msg -Type Verbose -MSG "Invoke-RestMethod -Uri $URI -Method $Command -Header $Header -ContentType ""application/json"" -Body $Body"
@@ -237,7 +237,6 @@ Function Get-Safe
 	{
 		Log-Msg -Type Error -MSG $_.Exception.Response.StatusDescription
 	}
-	
 	return $_safe.GetSafeResult
 }
 
@@ -258,7 +257,7 @@ Function Get-SafeMembers
 	{
 		Log-Msg -Type Error -MSG $_.Exception.Response.StatusDescription
 	}
-	
+
 	return $_safeOwners
 }
 
@@ -268,7 +267,7 @@ Function Test-Safe
 		[Parameter(Mandatory=$true)]
 		[String]$safeName
 		)
-		
+
 	try{
 		If ($null -eq $(Get-Safe -safeName $safeName))
 		{
@@ -306,7 +305,7 @@ Function Get-Account
 	{
 		Log-Msg -Type Error -MSG $_.Exception.Response.StatusDescription
 	}
-	
+
 	return $_account
 }
 
@@ -373,12 +372,12 @@ Function Get-LogonHeader
         Log-Msg -Type Error -MSG "Logon Token is Empty - Cannot login"
         exit
     }
-	
+
     # Create a Logon Token Header (This will be used through out all the script)
     # ---------------------------
     $logonHeader =  New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $logonHeader.Add("Authorization", $logonToken)
-	
+
 	return $logonHeader
 }
 
@@ -407,7 +406,7 @@ If ((Test-CommandExists Invoke-RestMethod) -eq $false)
 {
    Log-Msg -Type Error -MSG  "This script requires Powershell version 3 or above"
    exit
-}	
+}
 
 # Check that the PVWA URL is OK
 If (![string]::IsNullOrEmpty($PVWAURL))
@@ -416,7 +415,7 @@ If (![string]::IsNullOrEmpty($PVWAURL))
 	{
 		$PVWAURL = $PVWAURL.Substring(0,$PVWAURL.Length-1)
 	}
-	
+
 	try{
 		# Validate PVWA URL is OK
 		Log-Msg -Type Debug -MSG  "Trying to validate URL: $PVWAURL"
@@ -427,11 +426,10 @@ If (![string]::IsNullOrEmpty($PVWAURL))
 			Log-Msg -Type Error -MSG $_.Exception.Response.StatusCode.Value__
 		}
 	}
-	catch {		
+	catch {
 		Log-Msg -Type Error -MSG "PVWA URL could not be validated"
 		Log-Msg -Type Error -MSG $_.Exception
 	}
-	
 }
 else
 {
@@ -447,19 +445,21 @@ else
 #region [Logon]
 	# Get Credentials to Login
 	# ------------------------
+	$cert = Get-ChildItem -Path cert:\CurrentUser\My | ?{$_.Subject -eq "CN=Win-HP-Desk"}
 
 	$proxy = New-WebServiceProxy -Uri $URL_AIM
+    $proxy.ClientCertificates.Add($cert)
     $t = $proxy.getType().namespace
     $request = New-Object ($t + ".passwordRequest")
-    $request.AppID = $AppID;
+	$request.AppID = $AppID;
     $request.Query = "Safe="+$Safe+";Folder=Root;Object="+$ObjectName
-    $response = $proxy.GetPassword($request)
+	$response = $proxy.GetPassword($request)
 
 	$g_LogonHeader = $(Get-LogonHeader -User $response.UserName -Password $response.Content)
 #endregion
 
 #check to see if the account already exists
-		
+
 $accExists = $(Test-Account -safeName $Safe -accountName $AcctToVault -accountAddress $accountAddress)
 
 try{
