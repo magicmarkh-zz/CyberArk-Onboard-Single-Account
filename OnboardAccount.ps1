@@ -40,6 +40,9 @@ param
 	[Parameter(Mandatory=$true,HelpMessage="Please enter Object Name of API user")]
 	[String]$ObjectName,
 
+	[Parameter(Mandatory=$false,HelpMessage="Please enter the name of the computer certificate")]
+	[String]$CertName,
+
 	# Use this switch to Disable SSL verification (NOT RECOMMENDED)
 	[Parameter(Mandatory=$false)]
 	[Switch]$DisableSSLVerify
@@ -445,11 +448,14 @@ else
 #region [Logon]
 	# Get Credentials to Login
 	# ------------------------
-	$cert = Get-ChildItem -Path cert:\CurrentUser\My | ?{$_.Subject -eq "CN=Win-HP-Desk"}
+	$cert = Get-ChildItem -Path cert:\CurrentUser\My | ?{$_.Subject -eq $certname}
 
 	$proxy = New-WebServiceProxy -Uri $URL_AIM
-    $proxy.ClientCertificates.Add($cert)
-    $t = $proxy.getType().namespace
+	if($cert -ne $null)
+	{
+		$proxy.ClientCertificates.Add($cert)
+	}
+	$t = $proxy.getType().namespace
     $request = New-Object ($t + ".passwordRequest")
 	$request.AppID = $AppID;
     $request.Query = "Safe="+$Safe+";Folder=Root;Object="+$ObjectName
