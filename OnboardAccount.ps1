@@ -24,14 +24,14 @@ param
 	#[ValidateScript({Invoke-WebRequest -UseBasicParsing -DisableKeepAlive -Uri $_ -Method 'Head' -ErrorAction 'stop' -TimeoutSec 30})]
 	[String]$AppID,
 
-	[Parameter(Mandatory=$true,HelpMessage="Please enter Safe Name")]
-	[String]$Safe,
+	[Parameter(Mandatory=$true,HelpMessage="Please enter Target Safe Name")]
+	[String]$TargetSafe,
 
 	[Parameter(Mandatory=$true,HelpMessage="Please enter Account Name to vault")]
 	[Alias("account")]
 	[String]$AcctToVault,
 
-    [Parameter(Mandatory=$true,HelpMessage="Please enter Address for Account to vault")]
+    	[Parameter(Mandatory=$true,HelpMessage="Please enter Address for Account to vault")]
 	[String]$AcctAddress,
 
 	[Parameter(Mandatory=$true,HelpMessage="Please enter Platform Name for account to vault")]
@@ -39,6 +39,9 @@ param
 
 	[Parameter(Mandatory=$true,HelpMessage="Please enter Object Name of API user")]
 	[String]$ObjectName,
+	
+	[Parameter(Mandatory=$true,HelpMessage="Please enter Safe Name of API user")]
+	[String]$APIUserSafe,
 
 	[Parameter(Mandatory=$false,HelpMessage="Please enter the name of the computer certificate")]
 	[String]$CertName,
@@ -456,9 +459,9 @@ else
 		$proxy.ClientCertificates.Add($cert)
 	}
 	$t = $proxy.getType().namespace
-    $request = New-Object ($t + ".passwordRequest")
+    	$request = New-Object ($t + ".passwordRequest")
 	$request.AppID = $AppID;
-    $request.Query = "Safe="+$Safe+";Folder=Root;Object="+$ObjectName
+    	$request.Query = "Safe="+$APIUserSafe+";Folder=Root;Object="+$ObjectName
 	$response = $proxy.GetPassword($request)
 
 	$g_LogonHeader = $(Get-LogonHeader -User $response.UserName -Password $response.Content)
@@ -466,7 +469,7 @@ else
 
 #check to see if the account already exists
 
-$accExists = $(Test-Account -safeName $Safe -accountName $AcctToVault -accountAddress $accountAddress)
+$accExists = $(Test-Account -safeName $TargetSafe -accountName $AcctToVault -accountAddress $accountAddress)
 
 try{
     If ($accExists -eq $false)
@@ -474,7 +477,7 @@ try{
 
 	    # Create the Account
         $tmp_pw="1234"
-        $restBody = @{account=@{username=$AcctToVault;address=$AcctAddress;safe=$Safe;platformID=$PlatformName;password=$tmp_pw }}| ConvertTo-Json -Depth 5
+        $restBody = @{account=@{username=$AcctToVault;address=$AcctAddress;safe=$TargetSafe;platformID=$PlatformName;password=$tmp_pw }}| ConvertTo-Json -Depth 5
         Log-Msg -Type Debug -Msg $restBody
 	    $addAccountResult = $(Invoke-Rest -Uri $URL_Account -Header $g_LogonHeader -Body $restBody -Command "Post")
 	    if($addAccountResult -ne $null)
@@ -482,14 +485,14 @@ try{
 		    Log-Msg -Type Info -MSG "Onboarded $($AcctToVault)@$($AcctAddress) successfully"
 
             #now reconcile the password so that it's no longer known
-            $n_acct = (Get-Account -accountName $AcctToVault -accountAddress $AcctAddress -safeName $Safe)
+            $n_acct = (Get-Account -accountName $AcctToVault -accountAddress $AcctAddress -safeName $TargetSafe)
             Reconcile-Account -accountId $n_acct.Accountid
 	    }
     }
     Else
     {
         #trigger an account reconcile
-        $n_acct = (Get-Account -accountName $AcctToVault -accountAddress $AcctAddress -safeName $Safe)
+        $n_acct = (Get-Account -accountName $AcctToVault -accountAddress $AcctAddress -safeName $TargetSafe)
 	    Reconcile-Account -accountId $n_acct.AccountId
         #write Log Msg
     }
